@@ -1,7 +1,5 @@
 "use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +14,12 @@ interface LoginData {
 }
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState<LoginData>({ email: "", password: "", role: "doctor" });
+  const [formData, setFormData] = useState<LoginData>({ 
+    email: "", 
+    password: "", 
+    role: "doctor" 
+  });
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,18 +33,26 @@ const LoginPage = () => {
   };
 
   const handleSubmit = async () => {
-    const newErrors: { email?: string; password?: string } = {};
+    // Reset error before validation
+    setError(null);
 
+    // Validation
     if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setError("Email is required");
+      return;
+    }
+    
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
       setError("Email is invalid");
       return;
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
+      setError("Password is required");
+      return;
+    }
+
+    if (formData.password.length < 8) {
       setError("Password must be at least 8 characters");
       return;
     }
@@ -59,11 +67,6 @@ const LoginPage = () => {
 
       if (result?.error) {
         setError(result.error);
-      } else {
-        setSuccess("Login successful! Redirecting...");
-        // setTimeout(() => {
-        //   router.push("/");
-        // }, 30000); // 3 seconds delay
       }
     } catch (error: any) {
       setError(error.message || "An error occurred during login");
@@ -71,55 +74,95 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-md">
+    <div 
+      data-testid="login-page"
+      className="min-h-screen flex items-center justify-center bg-gray-100 p-4"
+    >
+      <Card 
+        data-testid="login-card"
+        className="w-full max-w-md mx-auto"
+      >
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center mb-4">Login</CardTitle>
-          <div className="flex justify-center space-x-4">
+          <CardTitle 
+            data-testid="login-title"
+            className="text-2xl font-bold text-center mb-4"
+          >
+            Login
+          </CardTitle>
+          <div className="flex justify-center space-x-4 mb-4">
             <Button
+              data-testid="doctor-role-button"
               type="button"
               variant={formData.role === "doctor" ? "default" : "outline"}
               onClick={() => setRole("doctor")}
+              className="w-1/2 sm:w-auto"
             >
               Doctor
             </Button>
             <Button
+              data-testid="admin-role-button"
               type="button"
               variant={formData.role === "admin" ? "default" : "outline"}
               onClick={() => setRole("admin")}
+              className="w-1/2 sm:w-auto"
             >
               Admin
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label 
+                htmlFor="email"
+                data-testid="email-label"
+              >
+                Email
+              </Label>
+              <Input
+                data-testid="email-input"
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label 
+                htmlFor="password"
+                data-testid="password-label"
+              >
+                Password
+              </Label>
+              <Input
+                data-testid="password-input"
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            {error && (
+              <p 
+                data-testid="error-message"
+                className="text-sm text-red-500 mt-2"
+              >
+                {error}
+              </p>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
-          {success && <p className="text-sm text-green-500 mt-2">{success}</p>}
         </CardContent>
         <CardFooter>
-          <Button className="w-full" type="button" onClick={handleSubmit}>
+          <Button
+            data-testid="login-submit-button"
+            className="w-full"
+            type="button"
+            onClick={handleSubmit}
+          >
             Login as {formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
           </Button>
         </CardFooter>
